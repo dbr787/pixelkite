@@ -77,8 +77,8 @@ const SIMPLE_CONFIGS = {
     logoScale: 0.7,
     tileRadius: 2.2,
     tileSpacing: 9,
-    mainHeartRadius: 25,
-    surroundingHeartRadius: 120, // Increased from 80 to 120 for much better coverage
+    mainHeartRadius: 15, // Reduced from 25 to 15
+    surroundingHeartRadius: 35, // Reduced from 120 to 35
   },
   tablet: {
     logoScale: 1.0,
@@ -989,11 +989,7 @@ export default function BuildkiteMosaic() {
 
         // Use optimized heart-shaped detection
         const mainHeartCandidates = getTilesInHeartArea(x, y, prevTiles, config.mainHeartRadius)
-        // Use circular detection for surrounding hearts to eliminate gaps
-        const surroundingHeartCandidates = prevTiles.filter((tile) => {
-          const distance = Math.sqrt((tile.x - x) ** 2 + (tile.y - y) ** 2)
-          return distance <= config.surroundingHeartRadius
-        })
+        const surroundingHeartCandidates = getTilesInHeartArea(x, y, prevTiles, config.surroundingHeartRadius)
 
         // Find the closest tile within main heart area
         let closestTile: MosaicTile | null = null
