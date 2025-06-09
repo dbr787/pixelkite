@@ -1,0 +1,433 @@
+/* Floating animation layer - completely independent */
+.floatingLayer {
+  animation: gentleFloat 4s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Different float animations for each mode */
+.heartFloat {
+  animation: heartFloat 6s ease-in-out infinite;
+}
+
+.fireFloat {
+  animation: fireFloat 4s ease-in-out infinite;
+}
+
+.waterFloat {
+  animation: waterFloat 5s ease-in-out infinite;
+}
+
+.earthFloat {
+  animation: earthFloat 7s ease-in-out infinite;
+}
+
+.windFloat {
+  animation: gentleFloat 3s ease-in-out infinite;
+}
+
+@keyframes gentleFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(var(--float-x, 3px), calc(var(--float-y, 2px) * -0.5));
+  }
+  50% {
+    transform: translate(calc(var(--float-x, 3px) * 0.5), calc(var(--float-y, 2px) * -1));
+  }
+  75% {
+    transform: translate(calc(var(--float-x, 3px) * -0.5), calc(var(--float-y, 2px) * -0.5));
+  }
+}
+
+@keyframes heartFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(var(--float-x, 3px), calc(var(--float-y, 2px) * -0.5)) rotate(2deg);
+  }
+  50% {
+    transform: translate(calc(var(--float-x, 3px) * 0.5), calc(var(--float-y, 2px) * -1)) rotate(-2deg);
+  }
+  75% {
+    transform: translate(calc(var(--float-x, 3px) * -0.5), calc(var(--float-y, 2px) * -0.5)) rotate(1deg);
+  }
+}
+
+@keyframes fireFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(var(--float-x, 3px), calc(var(--float-y, 2px) * -1)) scale(1.02);
+  }
+  50% {
+    transform: translate(calc(var(--float-x, 3px) * 0.5), calc(var(--float-y, 2px) * -1.5)) scale(0.98);
+  }
+  75% {
+    transform: translate(calc(var(--float-x, 3px) * -0.5), calc(var(--float-y, 2px) * -0.5)) scale(1.01);
+  }
+}
+
+@keyframes waterFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(calc(var(--float-x, 3px) * 0.8), calc(var(--float-y, 2px) * -0.3)) scale(1.01);
+  }
+  66% {
+    transform: translate(calc(var(--float-x, 3px) * -0.3), calc(var(--float-y, 2px) * -0.8)) scale(0.99);
+  }
+}
+
+@keyframes earthFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(calc(var(--float-x, 3px) * 0.3), calc(var(--float-y, 2px) * -0.3));
+  }
+}
+
+/* Base tile styles */
+.mosaicTile {
+  cursor: pointer;
+  transform-origin: center center;
+}
+
+/* Default state - slow fade out */
+.defaultState {
+  transition: fill 1500ms ease-out, filter 1500ms ease-out;
+  filter: brightness(100%) saturate(100%);
+}
+
+/* FIRE MODE STYLES */
+.fireHover {
+  transition: fill 50ms ease-out, filter 50ms ease-out;
+  filter: brightness(250%) saturate(180%) drop-shadow(0 0 12px currentColor);
+  animation: fireFlicker 0.5s ease-in-out infinite alternate;
+}
+
+.fireClose {
+  transition: fill 150ms ease-out, filter 150ms ease-out;
+  filter: brightness(200%) saturate(160%) drop-shadow(0 0 8px currentColor);
+  animation: fireFlicker 0.7s ease-in-out infinite alternate;
+}
+
+.fireMedium {
+  transition: fill 250ms ease-out, filter 250ms ease-out;
+  filter: brightness(160%) saturate(140%) drop-shadow(0 0 4px currentColor);
+  animation: fireFlicker 0.9s ease-in-out infinite alternate;
+}
+
+.fireFar {
+  transition: fill 350ms ease-out, filter 350ms ease-out;
+  filter: brightness(130%) saturate(120%);
+  animation: fireFlicker 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes fireFlicker {
+  0% {
+    filter: brightness(100%) saturate(100%);
+  }
+  100% {
+    filter: brightness(150%) saturate(120%);
+  }
+}
+
+/* HEART MODE STYLES */
+.heartHover {
+  transition: fill 50ms ease-out, filter 50ms ease-out, transform 300ms ease-out;
+  filter: brightness(200%) saturate(150%) drop-shadow(0 0 10px currentColor);
+  transform: scale(1.2);
+}
+
+.heartCenter {
+  transition: fill 200ms ease-out, filter 200ms ease-out, transform 500ms ease-out;
+  filter: brightness(180%) saturate(140%) drop-shadow(0 0 6px currentColor);
+  transform: scale(1.15) rotate(5deg);
+}
+
+.heartMiddle {
+  transition: fill 300ms ease-out, filter 300ms ease-out, transform 700ms ease-out;
+  filter: brightness(160%) saturate(130%) drop-shadow(0 0 4px currentColor);
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.heartOuter {
+  transition: fill 400ms ease-out, filter 400ms ease-out, transform 900ms ease-out;
+  filter: brightness(140%) saturate(120%);
+  transform: scale(1.05) rotate(3deg);
+}
+
+/* EARTH MODE STYLES */
+.earthHover {
+  transition: fill 50ms ease-out, filter 50ms ease-out, transform 200ms ease-out;
+  filter: brightness(180%) saturate(140%) drop-shadow(0 0 8px currentColor);
+  transform: scale(1.15);
+}
+
+.earthQuake {
+  transition: fill 200ms ease-out, filter 200ms ease-out;
+  filter: brightness(140%) saturate(120%) drop-shadow(0 0 4px currentColor);
+  animation: earthquakeShake 0.5s ease-in-out infinite;
+}
+
+/* WATER MODE STYLES */
+.waterHover {
+  transition: fill 50ms ease-out, filter 50ms ease-out, transform 300ms ease-out;
+  filter: brightness(200%) saturate(150%) drop-shadow(0 0 10px currentColor);
+  transform: scale(1.1);
+  animation: waterRipple 1s ease-in-out infinite;
+}
+
+/* Water drop effect - tiles fall from top like raindrops */
+.waterDrop {
+  transition: fill 200ms ease-out, filter 200ms ease-out;
+  filter: brightness(170%) saturate(130%) drop-shadow(0 0 6px currentColor);
+  animation: continuousRain 3s linear infinite;
+  animation-delay: calc(var(--rain-delay, 0) * 1s);
+}
+
+.waterMedium {
+  transition: fill 300ms ease-out, filter 300ms ease-out;
+  filter: brightness(150%) saturate(120%) drop-shadow(0 0 4px currentColor);
+  animation: continuousRain 3.5s linear infinite;
+  animation-delay: calc(var(--rain-delay, 0) * 1s + 0.5s);
+}
+
+.waterFar {
+  transition: fill 400ms ease-out, filter 400ms ease-out;
+  filter: brightness(130%) saturate(110%);
+  animation: continuousRain 4s linear infinite;
+  animation-delay: calc(var(--rain-delay, 0) * 1s + 1s);
+}
+
+@keyframes waterRipple {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* WIND MODE STYLES */
+.windHover {
+  transition: fill 50ms ease-out, filter 50ms ease-out, transform 200ms ease-out;
+  filter: brightness(180%) saturate(140%);
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Improved wind blown effect - more responsive to cursor movement */
+.windBlown {
+  transition: transform 0ms ease-out;
+  animation: windGustBlow 4s ease-out forwards;
+  transform-origin: center center;
+}
+
+/* Enhanced wind gust animation */
+@keyframes windGustBlow {
+  0% {
+    /* Start from original position */
+    transform: translate(0, 0) rotate(0deg);
+  }
+  8% {
+    /* Quick initial blow upward */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 40px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -120px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 25deg * (random() - 0.5) * 2));
+  }
+  15% {
+    /* Continue upward with more drift */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 60px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -150px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 35deg * (random() - 0.5) * 2));
+  }
+  25% {
+    /* Peak height, start drifting */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 80px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -140px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 30deg * (random() - 0.5) * 2));
+  }
+  40% {
+    /* Begin falling with sway */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 60px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -100px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * -20deg * (random() - 0.5) * 2));
+  }
+  55% {
+    /* Continue falling with opposite sway */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 40px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -60px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 15deg * (random() - 0.5) * 2));
+  }
+  70% {
+    /* More swaying as it falls */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 25px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -30px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * -10deg * (random() - 0.5) * 2));
+  }
+  85% {
+    /* Final gentle sway */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 10px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -10px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 5deg * (random() - 0.5) * 2));
+  }
+  95% {
+    /* Almost settled */
+    transform: translate(
+        calc(var(--wind-intensity, 0) * 3px * (random() - 0.5) * 2),
+        calc(var(--wind-intensity, 0) * -2px)
+      )
+      rotate(calc(var(--wind-intensity, 0) * 2deg * (random() - 0.5) * 2));
+  }
+  100% {
+    /* Return to original position */
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* Ensure floating animation never gets reset */
+.floatingLayer * {
+  animation-fill-mode: forwards;
+  animation-play-state: running;
+}
+
+/* Z-index management */
+.mosaicTile {
+  position: relative;
+}
+
+/* Locked hover state - stops all animations and locks position */
+.lockedHover {
+  animation: none !important;
+  transform: none !important;
+  position: relative;
+  z-index: 2000 !important;
+}
+
+/* Ensure locked hover tiles stay on top */
+.lockedHover path {
+  z-index: 2000 !important;
+}
+
+/* Hover states for z-index - updated to be below locked hover */
+.fireHover,
+.heartHover,
+.earthHover,
+.waterHover,
+.windHover {
+  z-index: 1500 !important;
+}
+
+.fireClose,
+.heartCenter,
+.earthQuake,
+.waterDrop {
+  z-index: 500 !important;
+}
+
+.fireMedium,
+.heartMiddle,
+.waterMedium {
+  z-index: 400 !important;
+}
+
+.fireFar,
+.heartOuter,
+.waterFar {
+  z-index: 300 !important;
+}
+
+.defaultState {
+  z-index: 1;
+}
+
+/* Let's add a continuous rain animation for the water effect */
+@keyframes continuousRain {
+  0% {
+    opacity: 0;
+    transform: translateY(-600px);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(600px);
+  }
+}
+
+/* Add earthquake animation for earth effect */
+@keyframes earthquakeShake {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  10% {
+    transform: translateY(calc(var(--quake-intensity, 0) * -8px));
+  }
+  30% {
+    transform: translateY(calc(var(--quake-intensity, 0) * 6px));
+  }
+  50% {
+    transform: translateY(calc(var(--quake-intensity, 0) * -4px));
+  }
+  70% {
+    transform: translateY(calc(var(--quake-intensity, 0) * 2px));
+  }
+  90% {
+    transform: translateY(calc(var(--quake-intensity, 0) * -1px));
+  }
+}
+
+/* Remove the waterDropFall animation since we're using continuousRain instead */
+@keyframes waterDropFall {
+  0% {
+    transform: translateY(-600px) scale(0.8);
+    opacity: 0.7;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-400px) scale(0.9);
+  }
+  60% {
+    transform: translateY(-50px) scale(1);
+  }
+  80% {
+    transform: translateY(10px) scale(1.1);
+  }
+  90% {
+    transform: translateY(-5px) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
