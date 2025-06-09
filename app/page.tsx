@@ -75,10 +75,10 @@ interface MouseMovement {
 const SIMPLE_CONFIGS = {
   mobile: {
     logoScale: 0.7,
-    tileRadius: 2.5,
-    tileSpacing: 10,
-    mainHeartRadius: 35,
-    surroundingHeartRadius: 70,
+    tileRadius: 2.2, // Reduced from 2.5
+    tileSpacing: 9, // Reduced from 10 for tighter spacing
+    mainHeartRadius: 25, // Reduced from 35
+    surroundingHeartRadius: 50, // Reduced from 70
   },
   tablet: {
     logoScale: 1.0,
