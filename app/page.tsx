@@ -71,6 +71,128 @@ interface MouseMovement {
   isInMosaic: boolean
 }
 
+// Pre-defined static size configurations
+interface MosaicSizeConfig {
+  name: string
+  minWidth: number
+  maxWidth: number
+  logoScale: number
+  tileRadius: number
+  tileSpacing: number
+  mainHeartRadius: number
+  surroundingHeartRadius: number
+  floatDistance: number
+  squeezeLayerMultiplier: number
+  transitionDelayMultiplier: number
+  rippleLayerDistance: number
+  performanceMode: "high" | "medium" | "low"
+}
+
+// Four optimized size configurations
+const MOSAIC_SIZE_CONFIGS: MosaicSizeConfig[] = [
+  // Small Mobile (320px - 480px)
+  {
+    name: "small-mobile",
+    minWidth: 0,
+    maxWidth: 480,
+    logoScale: 0.6,
+    tileRadius: 2,
+    tileSpacing: 8,
+    mainHeartRadius: 30,
+    surroundingHeartRadius: 60,
+    floatDistance: 0.2,
+    squeezeLayerMultiplier: 0.6,
+    transitionDelayMultiplier: 0.8,
+    rippleLayerDistance: 15,
+    performanceMode: "low",
+  },
+  // Large Mobile / Small Tablet (481px - 768px)
+  {
+    name: "large-mobile",
+    minWidth: 481,
+    maxWidth: 768,
+    logoScale: 0.8,
+    tileRadius: 2.8,
+    tileSpacing: 11,
+    mainHeartRadius: 40,
+    surroundingHeartRadius: 80,
+    floatDistance: 0.4,
+    squeezeLayerMultiplier: 0.8,
+    transitionDelayMultiplier: 0.9,
+    rippleLayerDistance: 20,
+    performanceMode: "medium",
+  },
+  // Tablet (769px - 1024px)
+  {
+    name: "tablet",
+    minWidth: 769,
+    maxWidth: 1024,
+    logoScale: 1.0,
+    tileRadius: 3.5,
+    tileSpacing: 14,
+    mainHeartRadius: 50,
+    surroundingHeartRadius: 100,
+    floatDistance: 0.8,
+    squeezeLayerMultiplier: 1.0,
+    transitionDelayMultiplier: 1.0,
+    rippleLayerDistance: 25,
+    performanceMode: "medium",
+  },
+  // Desktop (1025px+)
+  {
+    name: "desktop",
+    minWidth: 1025,
+    maxWidth: Number.POSITIVE_INFINITY,
+    logoScale: 1.2,
+    tileRadius: 4,
+    tileSpacing: 18,
+    mainHeartRadius: 50,
+    surroundingHeartRadius: 99,
+    floatDistance: 1.2,
+    squeezeLayerMultiplier: 1.0,
+    transitionDelayMultiplier: 1.0,
+    rippleLayerDistance: 25,
+    performanceMode: "high",
+  },
+]
+
+// Function to get the appropriate size configuration
+const getSizeConfig = (screenWidth: number): MosaicSizeConfig => {
+  return (
+    MOSAIC_SIZE_CONFIGS.find((config) => screenWidth >= config.minWidth && screenWidth <= config.maxWidth) ||
+    MOSAIC_SIZE_CONFIGS[MOSAIC_SIZE_CONFIGS.length - 1]
+  ) // Default to desktop
+}
+
+// Generate static squeeze layers based on configuration
+const generateSqueezeLayers = (config: MosaicSizeConfig) => [
+  {
+    maxDistance: 30 * config.squeezeLayerMultiplier,
+    sizeMultiplier: 1.8,
+    pushForce: 3.0 * config.squeezeLayerMultiplier,
+  },
+  {
+    maxDistance: 50 * config.squeezeLayerMultiplier,
+    sizeMultiplier: 1.4,
+    pushForce: 2.2 * config.squeezeLayerMultiplier,
+  },
+  {
+    maxDistance: 70 * config.squeezeLayerMultiplier,
+    sizeMultiplier: 1.1,
+    pushForce: 1.6 * config.squeezeLayerMultiplier,
+  },
+  {
+    maxDistance: 90 * config.squeezeLayerMultiplier,
+    sizeMultiplier: 0.9,
+    pushForce: 1.2 * config.squeezeLayerMultiplier,
+  },
+  {
+    maxDistance: 120 * config.squeezeLayerMultiplier,
+    sizeMultiplier: 0.7,
+    pushForce: 0.8 * config.squeezeLayerMultiplier,
+  },
+]
+
 // Buildkite logo colors - more contrast
 const BUILDKITE_COLORS = {
   darkGreen: "#0A8A5A", // Much darker green
@@ -125,78 +247,10 @@ const HEARTBEAT_DURATION = 400 // How long each heartbeat lasts
 // Transition delay increment per distance unit - REDUCED
 const TRANSITION_DELAY_INCREMENT = 15 // Reduced from 30ms to 15ms per layer
 
-// Responsive configuration for different screen sizes
-const getResponsiveConfig = (screenWidth: number, screenHeight: number) => {
-  const isMobile = screenWidth < 768
-  const isTablet = screenWidth >= 768 && screenWidth < 1024
-  const isSmallMobile = screenWidth < 480
-
-  // Calculate optimal logo scale based on both width and height
-  let logoScale: number
-  let tileRadius: number
-  let tileSpacing: number
-
-  if (isSmallMobile) {
-    // Very small screens (phones in portrait)
-    logoScale = Math.min(screenWidth / 600, screenHeight / 400) * 0.85
-    tileRadius = 2
-    tileSpacing = 9
-  } else if (isMobile) {
-    // Mobile screens
-    logoScale = Math.min(screenWidth / 700, screenHeight / 500) * 0.95
-    tileRadius = 2.5
-    tileSpacing = 10
-  } else if (isTablet) {
-    // Tablet screens
-    logoScale = Math.min(screenWidth / 900, screenHeight / 600) * 1.0
-    tileRadius = 3.2
-    tileSpacing = 14
-  } else {
-    // Desktop screens
-    logoScale = 1.2
-    tileRadius = 4
-    tileSpacing = 18
-  }
-
-  // Ensure minimum viable scale
-  logoScale = Math.max(logoScale, 0.4)
-
-  return {
-    logoScale,
-    tileRadius,
-    tileSpacing,
-    isMobile,
-    isTablet,
-    isSmallMobile,
-  }
-}
-
-// Heart-shaped detection radii - responsive to logo scale
-const getResponsiveHeartRadii = (screenWidth: number, screenHeight: number) => {
-  const config = getResponsiveConfig(screenWidth, screenHeight)
-  const baseMainRadius = 50
-  const baseSurroundingRadius = 99
-
-  return {
-    mainHeartRadius: baseMainRadius * config.logoScale,
-    surroundingHeartRadius: baseSurroundingRadius * config.logoScale,
-  }
-}
-
 // Ripple effect settings
 const RIPPLE_SPEED = 0.3 // Even faster ripple travel
 const RIPPLE_LAYERS = 5 // Number of ripple layers
-const RIPPLE_LAYER_DISTANCE = 25 // Distance between ripple layers
 const RIPPLE_DURATION = 300 // Even shorter duration for snappier ripple
-
-// Progressive squeeze layers - responsive
-const getResponsiveSqueezeLayers = (logoScale: number) => [
-  { maxDistance: 30 * logoScale, sizeMultiplier: 1.8, pushForce: 3.0 * logoScale },
-  { maxDistance: 50 * logoScale, sizeMultiplier: 1.4, pushForce: 2.2 * logoScale },
-  { maxDistance: 70 * logoScale, sizeMultiplier: 1.1, pushForce: 1.6 * logoScale },
-  { maxDistance: 90 * logoScale, sizeMultiplier: 0.9, pushForce: 1.2 * logoScale },
-  { maxDistance: 120 * logoScale, sizeMultiplier: 0.7, pushForce: 0.8 * logoScale },
-]
 
 // Define heart colors for sparkles
 const heartColors = [
@@ -214,6 +268,7 @@ export default function BuildkiteMosaic() {
   const animationRef = useRef<number>()
   const [tiles, setTiles] = useState<MosaicTile[]>([])
   const [dimensions, setDimensions] = useState({ width: 1200, height: 600 })
+  const [currentConfig, setCurrentConfig] = useState<MosaicSizeConfig>(MOSAIC_SIZE_CONFIGS[3]) // Default to desktop
   const [mouseMovement, setMouseMovement] = useState<MouseMovement>({
     x: 0,
     y: 0,
@@ -335,8 +390,9 @@ export default function BuildkiteMosaic() {
     return inside
   }
 
-  // Responsive version of getLogoSection that takes logo scale into account
-  const getLogoSectionResponsive = (x: number, y: number, width: number, height: number, logoScale: number) => {
+  // Static version of getLogoSection using current configuration
+  const getLogoSectionStatic = (x: number, y: number, width: number, height: number) => {
+    const logoScale = currentConfig.logoScale
     const logoWidth = 480 * logoScale
     const logoHeight = 320 * logoScale
     const logoLeft = width / 2 - logoWidth / 2
@@ -384,10 +440,9 @@ export default function BuildkiteMosaic() {
     return { inLogo: false, section: null }
   }
 
-  // Check if mouse is in mosaic area - responsive version
-  const isMouseInMosaicResponsive = (x: number, y: number, width: number, height: number) => {
-    const config = getResponsiveConfig(width, height)
-    const logoInfo = getLogoSectionResponsive(x, y, width, height, config.logoScale)
+  // Check if mouse is in mosaic area - static version
+  const isMouseInMosaicStatic = (x: number, y: number, width: number, height: number) => {
+    const logoInfo = getLogoSectionStatic(x, y, width, height)
     return logoInfo.inLogo
   }
 
@@ -460,40 +515,43 @@ export default function BuildkiteMosaic() {
   }
 
   // Trigger ripple effect from main heart - MUCH MORE RELIABLE
-  const triggerRipple = useCallback((mainHeartPos: { x: number; y: number }, currentTime: number) => {
-    setTiles((prevTiles) =>
-      prevTiles.map((tile) => {
-        if (tile.isMainHeart) return tile
+  const triggerRipple = useCallback(
+    (mainHeartPos: { x: number; y: number }, currentTime: number) => {
+      setTiles((prevTiles) =>
+        prevTiles.map((tile) => {
+          if (tile.isMainHeart) return tile
 
-        const distance = Math.sqrt((tile.x - mainHeartPos.x) ** 2 + (tile.y - mainHeartPos.y) ** 2)
-        const rippleLayer = Math.floor(distance / RIPPLE_LAYER_DISTANCE)
+          const distance = Math.sqrt((tile.x - mainHeartPos.x) ** 2 + (tile.y - mainHeartPos.y) ** 2)
+          const rippleLayer = Math.floor(distance / currentConfig.rippleLayerDistance)
 
-        // More lenient conditions for ripple triggering
-        if (rippleLayer < RIPPLE_LAYERS) {
-          // Check if this tile already has an active ripple
-          const hasActiveRipple = isRippleActive(tile, currentTime)
+          // More lenient conditions for ripple triggering
+          if (rippleLayer < RIPPLE_LAYERS) {
+            // Check if this tile already has an active ripple
+            const hasActiveRipple = isRippleActive(tile, currentTime)
 
-          // Only trigger new ripple if no active ripple exists OR if enough time has passed
-          const timeSinceLastRipple = currentTime - tile.lastRippleTime
-          const canTriggerNewRipple = !hasActiveRipple || timeSinceLastRipple > RIPPLE_DURATION * 0.5
+            // Only trigger new ripple if no active ripple exists OR if enough time has passed
+            const timeSinceLastRipple = currentTime - tile.lastRippleTime
+            const canTriggerNewRipple = !hasActiveRipple || timeSinceLastRipple > RIPPLE_DURATION * 0.5
 
-          if (canTriggerNewRipple) {
-            const rippleDelay = distance / RIPPLE_SPEED
-            const intensity = Math.max(0.3, 1 - rippleLayer * 0.15) // Higher base intensity, less falloff
+            if (canTriggerNewRipple) {
+              const rippleDelay = distance / RIPPLE_SPEED
+              const intensity = Math.max(0.3, 1 - rippleLayer * 0.15) // Higher base intensity, less falloff
 
-            return {
-              ...tile,
-              lastRippleTime: currentTime,
-              rippleDelay: rippleDelay,
-              rippleIntensity: intensity,
+              return {
+                ...tile,
+                lastRippleTime: currentTime,
+                rippleDelay: rippleDelay,
+                rippleIntensity: intensity,
+              }
             }
           }
-        }
 
-        return tile
-      }),
-    )
-  }, [])
+          return tile
+        }),
+      )
+    },
+    [currentConfig.rippleLayerDistance],
+  )
 
   // Draw either a circle or a heart - no blending
   const drawShape = (
@@ -569,14 +627,14 @@ export default function BuildkiteMosaic() {
     ctx.restore()
   }
 
-  // Initialize tiles
+  // Initialize tiles with static configuration
   useEffect(() => {
     const generateTiles = () => {
       const newTiles: MosaicTile[] = []
       const { width, height } = dimensions
 
-      // Get responsive configuration
-      const config = getResponsiveConfig(width, height)
+      // Use current static configuration
+      const config = currentConfig
       const { logoScale, tileRadius, tileSpacing } = config
 
       // Calculate grid dimensions with improved centering
@@ -596,8 +654,8 @@ export default function BuildkiteMosaic() {
           const x = offsetX + i * tileSpacing
           const y = offsetY + j * tileSpacing
 
-          // Use responsive logo dimensions for section detection
-          const logoInfo = getLogoSectionResponsive(x, y, width, height, logoScale)
+          // Use static logo dimensions for section detection
+          const logoInfo = getLogoSectionStatic(x, y, width, height)
 
           if (logoInfo.inLogo) {
             const section = logoInfo.section
@@ -609,9 +667,6 @@ export default function BuildkiteMosaic() {
                 : darkGreenHoverColors[Math.floor(Math.random() * darkGreenHoverColors.length)]
 
             const originalRgb = hexToRgb(originalColor)
-
-            // Responsive floating distance
-            const floatDistance = config.isMobile ? 0.3 : config.isTablet ? 0.6 : 1 + Math.random() * 2
 
             newTiles.push({
               id: `tile-${tileIndex}`,
@@ -627,7 +682,7 @@ export default function BuildkiteMosaic() {
               originalCenterY: y,
               section,
               animationOffset: Math.random() * Math.PI * 2,
-              floatDistance,
+              floatDistance: config.floatDistance + Math.random() * config.floatDistance,
               isClosest: false,
               isTouchingHovered: false,
               distanceFromCursor: Number.POSITIVE_INFINITY,
@@ -672,9 +727,9 @@ export default function BuildkiteMosaic() {
     }
 
     generateTiles()
-  }, [dimensions])
+  }, [dimensions, currentConfig])
 
-  // Progressive squeeze calculation with layered approach
+  // Progressive squeeze calculation with static configuration
   const calculateProgressiveDisplacements = useCallback(
     (tiles: MosaicTile[], mainHeartPos: { x: number; y: number } | null) => {
       const displacements = new Map<string, { x: number; y: number; sizeMultiplier: number }>()
@@ -686,9 +741,8 @@ export default function BuildkiteMosaic() {
 
       if (!mainHeartPos) return displacements
 
-      // Get responsive squeeze layers
-      const config = getResponsiveConfig(dimensions.width, dimensions.height)
-      const squeezeLayers = getResponsiveSqueezeLayers(config.logoScale)
+      // Get static squeeze layers
+      const squeezeLayers = generateSqueezeLayers(currentConfig)
 
       // First pass: Assign squeeze layers based on distance from main heart
       tiles.forEach((tile) => {
@@ -752,7 +806,7 @@ export default function BuildkiteMosaic() {
               const dy = tile.y - (innerTile.y + innerDisp.y)
               const distance = Math.sqrt(dx * dx + dy * dy)
 
-              const proximityThreshold = 30 * config.logoScale
+              const proximityThreshold = 30 * currentConfig.squeezeLayerMultiplier
               if (distance > 0 && distance < proximityThreshold) {
                 // Only if close enough
                 const pushDirection = { x: dx / distance, y: dy / distance }
@@ -768,7 +822,7 @@ export default function BuildkiteMosaic() {
 
       return displacements
     },
-    [dimensions],
+    [currentConfig],
   )
 
   // Canvas drawing function
@@ -820,6 +874,13 @@ export default function BuildkiteMosaic() {
         lastRippleTriggerTime.current = 0
       }
 
+      // Performance optimization based on configuration
+      const shouldSkipFrame = currentConfig.performanceMode === "low" && currentTime % 32 < 16 // Skip every other frame on low performance
+      if (shouldSkipFrame && tiles.some((tile) => tile.isTransitioning)) {
+        // Skip rendering this frame for performance, but continue animation loop
+        return
+      }
+
       sortedTiles.forEach((tile) => {
         ctx.save()
 
@@ -856,8 +917,8 @@ export default function BuildkiteMosaic() {
         let drawX = tile.centerX
         let drawY = tile.centerY
 
-        if (!tile.isMainHeart) {
-          // Only apply floating animation to non-main hearts
+        if (!tile.isMainHeart && currentConfig.performanceMode !== "low") {
+          // Only apply floating animation to non-main hearts and not in low performance mode
           const floatOffset = Math.sin(currentTime * 0.001 + tile.animationOffset) * tile.floatDistance
           drawX += floatOffset * 0.5
           drawY += floatOffset
@@ -920,8 +981,8 @@ export default function BuildkiteMosaic() {
         // Use calculated color directly
         const currentColor = `rgb(${r}, ${g}, ${b})`
 
-        // Set up glow effect
-        if (tile.glowIntensity > 0) {
+        // Set up glow effect (reduced for low performance mode)
+        if (tile.glowIntensity > 0 && currentConfig.performanceMode !== "low") {
           ctx.shadowColor = currentColor
           ctx.shadowBlur = tile.glowIntensity * 10
         } else {
@@ -949,7 +1010,7 @@ export default function BuildkiteMosaic() {
         ctx.restore()
       })
     },
-    [tiles, dimensions, calculateProgressiveDisplacements, triggerRipple],
+    [tiles, dimensions, calculateProgressiveDisplacements, triggerRipple, currentConfig],
   )
 
   // Animation loop
@@ -988,7 +1049,7 @@ export default function BuildkiteMosaic() {
       if (now - lastUpdateTime.current < 16) return
       lastUpdateTime.current = now
 
-      const inMosaic = isMouseInMosaicResponsive(x, y, dimensions.width, dimensions.height)
+      const inMosaic = isMouseInMosaicStatic(x, y, dimensions.width, dimensions.height)
 
       setTiles((prevTiles) => {
         if (!inMosaic) {
@@ -1027,10 +1088,9 @@ export default function BuildkiteMosaic() {
           })
         }
 
-        // Use optimized heart-shaped detection
-        const { mainHeartRadius, surroundingHeartRadius } = getResponsiveHeartRadii(dimensions.width, dimensions.height)
-        const mainHeartCandidates = getTilesInHeartArea(x, y, prevTiles, mainHeartRadius)
-        const surroundingHeartCandidates = getTilesInHeartArea(x, y, prevTiles, surroundingHeartRadius)
+        // Use static heart-shaped detection
+        const mainHeartCandidates = getTilesInHeartArea(x, y, prevTiles, currentConfig.mainHeartRadius)
+        const surroundingHeartCandidates = getTilesInHeartArea(x, y, prevTiles, currentConfig.surroundingHeartRadius)
 
         // Find the closest tile within main heart area
         let closestTile: MosaicTile | null = null
@@ -1088,18 +1148,16 @@ export default function BuildkiteMosaic() {
             }
           } else if (isInSurroundingArea) {
             // Surrounding hearts - within heart-shaped area
-            const intensity = Math.max(0, 1 - distance / surroundingHeartRadius)
+            const intensity = Math.max(0, 1 - distance / currentConfig.surroundingHeartRadius)
             const hoverRgb = hexToRgb(tile.hoverColor)
             const targetMorph = Math.max(0.8, intensity)
 
             const needsTransition = tile.targetMorphProgress < 0.5 && targetMorph >= 0.5 && !tile.isTransitioning
 
-            // Reduced transition delay for faster response
-            const transitionLayer = Math.floor(
-              distance / (25 * getResponsiveConfig(dimensions.width, dimensions.height).logoScale),
-            )
+            // Static transition delay calculation
+            const transitionLayer = Math.floor(distance / (25 * currentConfig.squeezeLayerMultiplier))
             const transitionDelay = needsTransition
-              ? transitionLayer * TRANSITION_DELAY_INCREMENT
+              ? transitionLayer * TRANSITION_DELAY_INCREMENT * currentConfig.transitionDelayMultiplier
               : tile.transitionDelay
 
             return {
@@ -1157,7 +1215,7 @@ export default function BuildkiteMosaic() {
         })
       })
     },
-    [dimensions],
+    [dimensions, currentConfig],
   )
 
   // Handle mouse leave
@@ -1199,7 +1257,7 @@ export default function BuildkiteMosaic() {
     )
   }, [])
 
-  // Handle canvas resize
+  // Handle canvas resize and configuration switching
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1214,13 +1272,21 @@ export default function BuildkiteMosaic() {
         ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
       }
 
-      setDimensions({ width: rect.width, height: rect.height })
+      const newDimensions = { width: rect.width, height: rect.height }
+      setDimensions(newDimensions)
+
+      // Determine and set the appropriate configuration
+      const newConfig = getSizeConfig(rect.width)
+      if (newConfig.name !== currentConfig.name) {
+        console.log(`Switching to ${newConfig.name} configuration for width ${rect.width}px`)
+        setCurrentConfig(newConfig)
+      }
     }
 
     updateSize()
     window.addEventListener("resize", updateSize)
     return () => window.removeEventListener("resize", updateSize)
-  }, [])
+  }, [currentConfig.name])
 
   return (
     <div className="h-screen w-full bg-gray-900 flex items-center justify-center overflow-hidden">
@@ -1232,6 +1298,10 @@ export default function BuildkiteMosaic() {
           onMouseLeave={handleMouseLeave}
           style={{ width: "100%", height: "100%" }}
         />
+        {/* Debug info - remove in production */}
+        <div className="absolute top-4 left-4 text-white text-sm opacity-50 pointer-events-none">
+          Config: {currentConfig.name} | Tiles: {tiles.length} | Performance: {currentConfig.performanceMode}
+        </div>
       </div>
     </div>
   )
