@@ -126,8 +126,15 @@ const HEARTBEAT_DURATION = 400 // How long each heartbeat lasts
 const TRANSITION_DELAY_INCREMENT = 15 // Reduced from 30ms to 15ms per layer
 
 // Heart-shaped detection radii - 10% BIGGER than previous half size
-const MAIN_HEART_RADIUS = 50 // Increased from 45 to 50 (10% bigger)
-const SURROUNDING_HEART_RADIUS = 99 // Increased from 90 to 99 (10% bigger)
+const getResponsiveHeartRadii = (screenWidth: number) => {
+  const isMobile = screenWidth < 768
+  const isTablet = screenWidth >= 768 && screenWidth < 1024
+
+  return {
+    mainHeartRadius: isMobile ? 35 : isTablet ? 42 : 50,
+    surroundingHeartRadius: isMobile ? 70 : isTablet ? 85 : 99,
+  }
+}
 
 // Ripple effect settings
 const RIPPLE_SPEED = 0.3 // Even faster ripple travel
@@ -331,9 +338,68 @@ export default function BuildkiteMosaic() {
     return { inLogo: false, section: null }
   }
 
+  // Responsive version of getLogoSection that takes logo scale into account
+  const getLogoSectionResponsive = (x: number, y: number, width: number, height: number, logoScale: number) => {
+    const logoWidth = 480 * logoScale
+    const logoHeight = 320 * logoScale
+    const logoLeft = width / 2 - logoWidth / 2
+    const logoTop = height / 2 - logoHeight / 2
+
+    const logoX = (x - logoLeft) / logoScale
+    const logoY = (y - logoTop) / logoScale
+
+    if (logoX < 0 || logoX > 480 || logoY < 0 || logoY > 320) {
+      return { inLogo: false, section: null }
+    }
+
+    const shape1 = [
+      { x: 320, y: 160 },
+      { x: 320, y: 320 },
+      { x: 480, y: 240 },
+      { x: 480, y: 80 },
+    ]
+
+    const shape2 = [
+      { x: 320, y: 0 },
+      { x: 320, y: 160 },
+      { x: 480, y: 80 },
+    ]
+
+    const shape3 = [
+      { x: 160, y: 80 },
+      { x: 160, y: 240 },
+      { x: 320, y: 160 },
+      { x: 320, y: 0 },
+    ]
+
+    const shape4 = [
+      { x: 0, y: 0 },
+      { x: 0, y: 160 },
+      { x: 160, y: 240 },
+      { x: 160, y: 80 },
+    ]
+
+    if (pointInPolygon(logoX, logoY, shape1)) return { inLogo: true, section: 1 }
+    if (pointInPolygon(logoX, logoY, shape2)) return { inLogo: true, section: 2 }
+    if (pointInPolygon(logoX, logoY, shape3)) return { inLogo: true, section: 3 }
+    if (pointInPolygon(logoX, logoY, shape4)) return { inLogo: true, section: 4 }
+
+    return { inLogo: false, section: null }
+  }
+
   // Check if mouse is in mosaic area
   const isMouseInMosaic = (x: number, y: number, width: number, height: number) => {
     const logoInfo = getLogoSection(x, y, width, height)
+    return logoInfo.inLogo
+  }
+
+  // Check if mouse is in mosaic area - responsive version
+  const isMouseInMosaicResponsive = (x: number, y: number, width: number, height: number) => {
+    const isMobile = width < 768
+    const isTablet = width >= 768 && width < 1024
+    const logoScale = isMobile ? 0.7 : isTablet ? 0.9 : 1.2
+
+    const logoInfo = getLogoSectionResponsive(x, y, width, height, logoScale)
     return logoInfo.inLogo
   }
 
@@ -521,8 +587,19 @@ export default function BuildkiteMosaic() {
       const newTiles: MosaicTile[] = []
       const { width, height } = dimensions
 
-      const circleRadius = 4
-      const spacing = 18
+      // Responsive tile sizing based on screen width
+      const isMobile = width < 768
+      const isTablet = width >= 768 && width < 1024
+
+      // Adjust tile properties for different screen sizes
+      const circleRadius = isMobile ? 2.5 : isTablet ? 3 : 4
+      const spacing = isMobile ? 12 : isTablet ? 15 : 18
+
+      // Responsive logo scaling
+      const logoScale = isMobile ? 0.7 : isTablet ? 0.9 : 1.2
+      const logoWidth = 480 * logoScale
+      const logoHeight = 320 * logoScale
+
       const cols = Math.floor(width / spacing)
       const rows = Math.floor(height / spacing)
 
@@ -536,7 +613,8 @@ export default function BuildkiteMosaic() {
           const x = offsetX + i * spacing
           const y = offsetY + j * spacing
 
-          const logoInfo = getLogoSection(x, y, width, height)
+          // Use responsive logo dimensions for section detection
+          const logoInfo = getLogoSectionResponsive(x, y, width, height, logoScale)
 
           if (logoInfo.inLogo) {
             const section = logoInfo.section
@@ -544,8 +622,8 @@ export default function BuildkiteMosaic() {
               section === 2 || section === 4 ? BUILDKITE_COLORS.lightGreen : BUILDKITE_COLORS.darkGreen
             const hoverColor =
               section === 2 || section === 4
-                ? lightGreenHoverColors[Math.floor(Math.random() * lightGreenHoverColors.length)] // Light green sections get dark berry colors
-                : darkGreenHoverColors[Math.floor(Math.random() * darkGreenHoverColors.length)] // Dark green sections get citrus colors
+                ? lightGreenHoverColors[Math.floor(Math.random() * lightGreenHoverColors.length)]
+                : darkGreenHoverColors[Math.floor(Math.random() * darkGreenHoverColors.length)]
 
             const originalRgb = hexToRgb(originalColor)
 
@@ -563,7 +641,7 @@ export default function BuildkiteMosaic() {
               originalCenterY: y,
               section,
               animationOffset: Math.random() * Math.PI * 2,
-              floatDistance: 1 + Math.random() * 2,
+              floatDistance: isMobile ? 0.5 : isTablet ? 0.8 : 1 + Math.random() * 2,
               isClosest: false,
               isTouchingHovered: false,
               distanceFromCursor: Number.POSITIVE_INFINITY,
@@ -589,12 +667,11 @@ export default function BuildkiteMosaic() {
               targetR: originalRgb.r,
               targetG: originalRgb.g,
               targetB: originalRgb.b,
-              // Sparkle properties
               sparkleTimer: 0,
               sparkleInterval: SPARKLE_MIN_INTERVAL + Math.random() * (SPARKLE_MAX_INTERVAL - SPARKLE_MIN_INTERVAL),
               sparkleColorIndex: Math.floor(Math.random() * heartColors.length),
               nextSparkleTime: 0,
-              squeezeLayer: -1, // Will be calculated based on distance
+              squeezeLayer: -1,
               colorTransitionStartTime: 0,
               isTransitioning: false,
               lastUpdateTime: 0,
@@ -920,7 +997,7 @@ export default function BuildkiteMosaic() {
       if (now - lastUpdateTime.current < 16) return
       lastUpdateTime.current = now
 
-      const inMosaic = isMouseInMosaic(x, y, dimensions.width, dimensions.height)
+      const inMosaic = isMouseInMosaicResponsive(x, y, dimensions.width, dimensions.height)
 
       setTiles((prevTiles) => {
         if (!inMosaic) {
@@ -960,8 +1037,9 @@ export default function BuildkiteMosaic() {
         }
 
         // Use optimized heart-shaped detection
-        const mainHeartCandidates = getTilesInHeartArea(x, y, prevTiles, MAIN_HEART_RADIUS)
-        const surroundingHeartCandidates = getTilesInHeartArea(x, y, prevTiles, SURROUNDING_HEART_RADIUS)
+        const { mainHeartRadius, surroundingHeartRadius } = getResponsiveHeartRadii(dimensions.width)
+        const mainHeartCandidates = getTilesInHeartArea(x, y, prevTiles, mainHeartRadius)
+        const surroundingHeartCandidates = getTilesInHeartArea(x, y, prevTiles, surroundingHeartRadius)
 
         // Find the closest tile within main heart area
         let closestTile: MosaicTile | null = null
@@ -1019,7 +1097,7 @@ export default function BuildkiteMosaic() {
             }
           } else if (isInSurroundingArea) {
             // Surrounding hearts - within heart-shaped area
-            const intensity = Math.max(0, 1 - distance / SURROUNDING_HEART_RADIUS)
+            const intensity = Math.max(0, 1 - distance / surroundingHeartRadius)
             const hoverRgb = hexToRgb(tile.hoverColor)
             const targetMorph = Math.max(0.8, intensity)
 
